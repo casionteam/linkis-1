@@ -15,66 +15,71 @@
  * limitations under the License.
  */
 
-package org.apache.linkis.engineplugin.openlookeng
+package org.apache.linkis.engineplugin.openlookeng;
 
-import org.apache.linkis.engineplugin.openlookeng.builder.OpenLooKengProcessECLaunchBuilder
-import org.apache.linkis.engineplugin.openlookeng.factory.OpenLooKengEngineConnFactory
-import org.apache.linkis.manager.engineplugin.common.EngineConnPlugin
-import org.apache.linkis.manager.engineplugin.common.creation.EngineConnFactory
-import org.apache.linkis.manager.engineplugin.common.launch.EngineConnLaunchBuilder
-import org.apache.linkis.manager.engineplugin.common.resource.{
-  EngineResourceFactory,
-  GenericEngineResourceFactory
-}
-import org.apache.linkis.manager.label.entity.Label
-import org.apache.linkis.manager.label.entity.engine.EngineType
-import org.apache.linkis.manager.label.utils.EngineTypeLabelCreator
+import org.apache.linkis.engineplugin.openlookeng.builder.OpenLooKengProcessECLaunchBuilder;
+import org.apache.linkis.engineplugin.openlookeng.factory.OpenLooKengEngineConnFactory;
+import org.apache.linkis.manager.engineplugin.common.EngineConnPlugin;
+import org.apache.linkis.manager.engineplugin.common.creation.EngineConnFactory;
+import org.apache.linkis.manager.engineplugin.common.launch.EngineConnLaunchBuilder;
+import org.apache.linkis.manager.engineplugin.common.resource.EngineResourceFactory;
+import org.apache.linkis.manager.engineplugin.common.resource.GenericEngineResourceFactory;
+import org.apache.linkis.manager.label.entity.Label;
+import org.apache.linkis.manager.label.entity.engine.EngineType;
+import org.apache.linkis.manager.label.utils.EngineTypeLabelCreator;
 
-import java.util
-import java.util.List
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
-class OpenLooKengECPlugin extends EngineConnPlugin {
+public class OpenLooKengECPlugin implements EngineConnPlugin {
 
-  private val resourceLocker = new Object()
+  private final Object resourceLocker = new Object();
+  private final Object engineFactoryLocker = new Object();
 
-  private val engineLaunchBuilderLocker = new Object()
+  private EngineResourceFactory engineResourceFactory;
+  private EngineConnFactory engineFactory;
 
-  private val engineFactoryLocker = new Object()
+  private final List<Label<?>> defaultLabels = new ArrayList<>();
 
-  private var engineResourceFactory: EngineResourceFactory = _
-
-  private var engineLaunchBuilder: EngineConnLaunchBuilder = _
-
-  private var engineFactory: EngineConnFactory = _
-
-  private val defaultLabels: List[Label[_]] = new util.ArrayList[Label[_]]()
-
-  override def init(params: util.Map[String, AnyRef]): Unit = {
-    val engineTypeLabel =
-      EngineTypeLabelCreator.createEngineTypeLabel(EngineType.OPENLOOKENG.toString)
-    this.defaultLabels.add(engineTypeLabel)
+  @Override
+  public void init(Map<String, Object> params) {
+    Label<?> engineTypeLabel =
+            EngineTypeLabelCreator.createEngineTypeLabel(EngineType.OPENLOOKENG().toString());
+    this.defaultLabels.add(engineTypeLabel);
   }
 
-  override def getEngineResourceFactory: EngineResourceFactory = {
-    if (null == engineResourceFactory) resourceLocker synchronized {
-      engineResourceFactory = new GenericEngineResourceFactory
+  @Override
+  public EngineResourceFactory getEngineResourceFactory() {
+    if (engineResourceFactory == null) {
+      synchronized (resourceLocker) {
+        if (engineResourceFactory == null) {
+          engineResourceFactory = new GenericEngineResourceFactory();
+        }
+      }
     }
-    engineResourceFactory
+    return engineResourceFactory;
   }
 
-  override def getEngineConnLaunchBuilder: EngineConnLaunchBuilder = {
-    new OpenLooKengProcessECLaunchBuilder
+  @Override
+  public EngineConnLaunchBuilder getEngineConnLaunchBuilder() {
+    return new OpenLooKengProcessECLaunchBuilder();
   }
 
-  override def getEngineConnFactory: EngineConnFactory = {
-    if (null == engineFactory) engineFactoryLocker synchronized {
-      engineFactory = new OpenLooKengEngineConnFactory
+  @Override
+  public EngineConnFactory getEngineConnFactory() {
+    if (engineFactory == null) {
+      synchronized (engineFactoryLocker) {
+        if (engineFactory == null) {
+          engineFactory = new OpenLooKengEngineConnFactory();
+        }
+      }
     }
-    engineFactory
+    return engineFactory;
   }
 
-  override def getDefaultLabels: util.List[Label[_]] = {
-    this.defaultLabels
+  @Override
+  public List<Label<?>> getDefaultLabels() {
+    return this.defaultLabels;
   }
-
 }
